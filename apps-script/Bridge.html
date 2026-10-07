@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0a1628; --navy-light: #1a2744; --blue: #0066ff; --blue-light: #4d94ff;
+      --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0; --gray-600: #475569;
+      --success: #10b981; --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--navy); height: 100vh; overflow: hidden; }
+    
+    /* LOGIN */
+    #login-screen { 
+      display: flex; align-items: center; justify-content: center; height: 100vh; 
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); position: relative; overflow: hidden;
+    }
+    #login-screen::before {
+      content: ''; position: absolute; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0, 102, 255, 0.15) 0%, transparent 70%);
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+    }
+    .login-box { 
+      background: rgba(10, 22, 40, 0.94); backdrop-filter: blur(20px);
+      padding: 3rem; border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; width: 100%; max-width: 420px; 
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3); text-align: center; position: relative; z-index: 10; color: #fff;
+    }
+    .login-logo { display: block; width: min(100%, 320px); height: auto; max-height: 88px; object-fit: contain; margin: 0 auto 0.5rem; }
+    .login-sub { color: #cbd5e1; margin-bottom: 2rem; font-size: 0.9rem; }
+    .input-group { margin-bottom: 1.25rem; text-align: left; }
+    .input-group label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #fff; }
+    .input-group input { 
+      width: 100%; padding: 0.875rem 1rem; border: 2px solid var(--gray-200); 
+      border-radius: 12px; font-size: 1rem; transition: 0.3s; font-family: inherit; background: white;
+    }
+    .input-group input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1); }
+    .btn-primary { 
+      width: 100%; padding: 1rem; background: var(--blue); color: white; border: none; 
+      border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; 
+    }
+    .btn-primary:hover { background: #0047b3; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0, 102, 255, 0.3); }
+    .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .error-msg { color: var(--danger); font-size: 0.875rem; margin-top: 1rem; display: none; font-weight: 500; }
+
+    /* DASHBOARD */
+    #dashboard { display: none; height: 100vh; flex-direction: column; }
+    .dash-header { 
+      background: white; padding: 1.25rem 2rem; border-bottom: 1px solid var(--gray-200); 
+      display: flex; justify-content: space-between; align-items: center; 
+    }
+    .dash-header h1 { font-size: 1.25rem; font-weight: 800; color: var(--navy); display: flex; align-items: center; gap: 0.5rem; }
+    .dash-header h1 span { color: var(--blue); }
+    
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 2rem; }
+    .stat-card { background: white; padding: 1.5rem; border-radius: 16px; border: 1px solid var(--gray-200); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .stat-label { font-size: 0.875rem; color: var(--gray-600); font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 2rem; font-weight: 800; color: var(--navy); }
+    .stat-value.blue { color: var(--blue); }
+    .stat-value.green { color: var(--success); }
+
+    .controls { padding: 0 2rem 1rem; display: flex; gap: 1rem; align-items: center; }
+    .filter-btn { 
+      padding: 0.6rem 1.25rem; border: 1px solid var(--gray-200); background: white; 
+      border-radius: 8px; font-weight: 600; color: var(--gray-600); cursor: pointer; transition: 0.2s; font-family: inherit;
+    }
+    .filter-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+    
+    .table-container { flex: 1; overflow-y: auto; padding: 0 2rem 2rem; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid var(--gray-200); }
+    th { background: var(--gray-100); text-align: left; padding: 1rem 1.5rem; font-weight: 700; color: var(--gray-600); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--gray-200); }
+    td { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--gray-100); color: var(--navy); font-size: 0.95rem; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--gray-50); }
+    
+    .sub-text { font-size: 0.85rem; color: var(--gray-600); margin-top: 0.25rem; }
+    .type-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .type-ambassador { background: rgba(0, 102, 255, 0.1); color: var(--blue); }
+    .type-contact { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    
+    .status-badge { display: inline-block; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+    .status-new { background: rgba(0, 102, 255, 0.1); color: var(--blue); }
+    .status-replied { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    
+    .btn-reply { 
+      padding: 0.5rem 1rem; background: var(--navy); color: white; border: none; 
+      border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; 
+    }
+    .btn-reply:hover { background: var(--blue); }
+    
+    .loading, .empty-state { text-align: center; padding: 3rem; color: var(--gray-600); font-weight: 500; }
+    .error { text-align: center; padding: 3rem; color: var(--danger); font-weight: 500; }
+
+    /* MODAL */
+    .modal-overlay { 
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+      background: rgba(10, 22, 40, 0.6); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center; z-index: 1000; 
+    }
+    .modal { 
+      background: white; padding: 2.5rem; border-radius: 20px; width: 90%; max-width: 550px; 
+      box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: modalIn 0.3s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .modal h3 { margin-bottom: 0.5rem; font-weight: 800; color: var(--navy); }
+    .modal-info { color: var(--gray-600); margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .modal-info strong { color: var(--navy); }
+    .modal textarea { 
+      width: 100%; min-height: 160px; padding: 1rem; border: 2px solid var(--gray-200); 
+      border-radius: 12px; font-family: inherit; margin-bottom: 1.5rem; resize: vertical; font-size: 0.95rem;
+    }
+    .modal textarea:focus { outline: none; border-color: var(--blue); }
+    .modal-actions { display: flex; gap: 1rem; justify-content: flex-end; }
+    .btn-secondary { 
+      padding: 0.75rem 1.5rem; background: var(--gray-100); color: var(--gray-600); 
+      border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+    }
+    .btn-secondary:hover { background: var(--gray-200); }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 2rem; right: 2rem; background: var(--navy); color: white;
+      padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen">
+    <div class="login-box">
+      <img class="login-logo" id="login-logo" alt="NeoMinds Tech Hub">
+      <script>
+        const loginLogoData = [
+          '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',
+        ].join('');
+        document.getElementById('login-logo').src = 'data:image/webp;base64,' + loginLogoData;
+      </script>
+      <div class="login-sub">Secure Admin Dashboard Access</div>
+      <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="Enter username" autocomplete="off">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter password">
+      </div>
+      <button class="btn-primary" id="login-btn" onclick="login()">Sign In</button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <div class="dash-header">
+      <h1>NEO<span>MINDS</span> ADMIN</h1>
+      <button class="btn-reply" style="background: var(--danger);" onclick="logout()">Logout</button>
+    </div>
+    
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Requests</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">New / Pending</div>
+        <div class="stat-value blue" id="stat-new">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Replied</div>
+        <div class="stat-value green" id="stat-replied">0</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="filter-btn active" onclick="filterRequests('all', this)">All Requests</button>
+      <button class="filter-btn" onclick="filterRequests('contact', this)">Contact</button>
+      <button class="filter-btn" onclick="filterRequests('ambassador', this)">Ambassadors</button>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Student</th>
+            <th>College</th>
+            <th>Program</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="7" class="loading">Loading requests...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REPLY MODAL -->
+  <div class="modal-overlay" id="reply-modal">
+    <div class="modal">
+      <h3>Send Reply</h3>
+      <div class="modal-info">
+        To: <strong id="modal-student-name"></strong> (<span id="modal-student-email"></span>)
+      </div>
+      <input type="hidden" id="modal-request-id">
+      <textarea id="reply-message" placeholder="Type your reply here..."></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" id="send-reply-btn" style="width: auto; padding: 0.75rem 2rem;" onclick="sendReply()">Send Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let currentToken = null;
+    let allRequests = [];
+    let currentFilter = 'all';
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function login() {
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      const btn = document.getElementById('login-btn');
+      const err = document.getElementById('login-error');
+      
+      btn.textContent = 'Authenticating...';
+      btn.disabled = true;
+      err.style.display = 'none';
+
+      google.script.run
+        .withSuccessHandler(res => {
+          currentToken = res.token;
+          document.getElementById('login-screen').style.display = 'none';
+          document.getElementById('dashboard').style.display = 'flex';
+          loadRequests();
+        })
+        .withFailureHandler(errMsg => {
+          err.textContent = errMsg.message || 'Authentication failed.';
+          err.style.display = 'block';
+          btn.textContent = 'Sign In';
+          btn.disabled = false;
+        })
+        .processBridgeRequest({ action: 'login', username: u, password: p });
+    }
+
+    function logout() {
+      google.script.run.processBridgeRequest({ action: 'logout', token: currentToken });
+      currentToken = null;
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('login-btn').textContent = 'Sign In';
+      document.getElementById('login-btn').disabled = false;
+    }
+
+    function loadRequests() {
+      document.getElementById('table-body').innerHTML = '<tr><td colspan="7" class="loading">Loading requests...</td></tr>';
+      google.script.run
+        .withSuccessHandler(data => {
+          allRequests = data;
+          applyFilter();
+        })
+        .withFailureHandler(err => {
+          document.getElementById('table-body').innerHTML = `<tr><td colspan="7" class="error">Error: ${err.message}</td></tr>`;
+          if (err.message.includes('Session expired')) logout();
+        })
+        .processBridgeRequest({ action: 'list', token: currentToken });
+    }
+
+    function filterRequests(type, btn) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilter();
+    }
+
+    function applyFilter() {
+      const filtered = currentFilter === 'all' ? allRequests : allRequests.filter(r => r.type === currentFilter);
+      renderTable(filtered);
+      updateStats(allRequests);
+    }
+
+    function updateStats(data) {
+      document.getElementById('stat-total').textContent = data.length;
+      document.getElementById('stat-new').textContent = data.filter(r => r.status === 'New').length;
+      document.getElementById('stat-replied').textContent = data.filter(r => r.status === 'Replied').length;
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No requests found.</td></tr>';
+        return;
+      }
+      
+      data.forEach(req => {
+        const date = new Date(req.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const statusClass = req.status === 'New' ? 'status-new' : 'status-replied';
+        const typeBadge = req.type === 'ambassador' 
+          ? '<span class="type-badge type-ambassador">Ambassador</span>' 
+          : '<span class="type-badge type-contact">Contact</span>';
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${typeBadge}</td>
+          <td><strong>${escapeHtml(req.name)}</strong><div class="sub-text">${escapeHtml(req.email)}</div></td>
+          <td>${escapeHtml(req.college || 'N/A')}</td>
+          <td>${escapeHtml(req.program || 'N/A')}</td>
+          <td>${date}</td>
+          <td><span class="status-badge ${statusClass}">${req.status}</span></td>
+          <td><button class="btn-reply" onclick="openReplyModal('${req.id}', '${escapeHtml(req.name)}', '${escapeHtml(req.email)}')">Reply</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openReplyModal(id, name, email) {
+      document.getElementById('modal-request-id').value = id;
+      document.getElementById('modal-student-name').textContent = name;
+      document.getElementById('modal-student-email').textContent = email;
+      document.getElementById('reply-message').value = `Hello ${name},\n\nThank you for reaching out to NeoMinds Tech Hub. `;
+      document.getElementById('reply-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('reply-modal').style.display = 'none';
+    }
+
+    function sendReply() {
+      const id = document.getElementById('modal-request-id').value;
+      const message = document.getElementById('reply-message').value.trim();
+      const btn = document.getElementById('send-reply-btn');
+      
+      if (!message) { showToast('Please enter a message.', 'error'); return; }
+      
+      btn.textContent = 'Sending...';
+      btn.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(() => {
+          closeModal();
+          showToast('Email sent successfully!', 'success');
+          loadRequests();
+        })
+        .withFailureHandler(err => {
+          showToast('Failed to send: ' + err.message, 'error');
+          btn.textContent = 'Send Email';
+          btn.disabled = false;
+        })
+        .processBridgeRequest({ action: 'reply', token: currentToken, id: id, message: message });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    document.getElementById('password').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') login();
+    });
+  </script>
+</body>
+</html>
